@@ -5,11 +5,11 @@ import com.group.libraryapp.domain.user.UserRepository
 import com.group.libraryapp.dto.user.request.UserCreateRequest
 import com.group.libraryapp.dto.user.request.UserUpdateRequest
 import org.assertj.core.api.Assertions.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.repository.findByIdOrNull
 import javax.transaction.Transactional
 
 @Transactional
@@ -50,8 +50,8 @@ open class UserServiceTest @Autowired constructor(
         val age2 = null
         userRepository.saveAll(
             listOf(
-                User(name1, age1),
-                User(name2, age2),
+                User(name = name1, age = age1),
+                User(name = name2, age = age2),
             )
         )
 
@@ -68,17 +68,17 @@ open class UserServiceTest @Autowired constructor(
     @DisplayName("updateUserName: 정상 케이스 테스트")
     fun updateUserName() {
         // given
-        val savedUser = userRepository.save(User("A", null))
+        val savedUser = userRepository.save(User(name = "A", age = null))
 
         val newName = "B"
-        val request = UserUpdateRequest(savedUser.id, newName)
+        val request = UserUpdateRequest(savedUser.id!!, newName)
 
         // when
         userService.updateUserName(request)
-        val updatedUser = userRepository.findById(savedUser.id).get()
+        val updatedUser = userRepository.findByIdOrNull(savedUser.id!!)
 
         // then
-        assertThat(updatedUser).isNotNull
+        requireNotNull(updatedUser)
         assertThat(updatedUser.name).isEqualTo(newName)
     }
 

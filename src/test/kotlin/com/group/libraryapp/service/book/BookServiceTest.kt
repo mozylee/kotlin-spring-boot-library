@@ -9,6 +9,7 @@ import com.group.libraryapp.dto.book.request.BookLoanRequest
 import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -21,8 +22,11 @@ import javax.transaction.Transactional
 @SpringBootTest
 open class BookServiceTest @Autowired constructor(
     private val bookService: BookService,
+
     private val bookRepository: BookRepository,
+
     private val userRepository: UserRepository,
+
     private val userLoanHistoryRepository: UserLoanHistoryRepository,
 ) {
 
@@ -51,8 +55,8 @@ open class BookServiceTest @Autowired constructor(
         val bookName = "이상한 나라의 엘리스"
         val userName = "이정주"
 
-        bookRepository.save(Book(bookName))
-        userRepository.save(User(userName, 999))
+        bookRepository.save(Book(name = bookName))
+        userRepository.save(User(name = userName, age = 999))
         val request = BookLoanRequest(userName, bookName)
 
         // when
@@ -64,7 +68,7 @@ open class BookServiceTest @Autowired constructor(
 
         val (loanHistory) = results
         assertThat(loanHistory.bookName).isEqualTo(bookName)
-        assertThat(loanHistory.user.name).isEqualTo(userName)
+        assertThat(loanHistory.user!!.name).isEqualTo(userName)
         assertThat(loanHistory.isReturn).isFalse
     }
 
@@ -75,8 +79,8 @@ open class BookServiceTest @Autowired constructor(
         val bookName = "이상한 나라의 엘리스"
         val userName = "이정주"
 
-        bookRepository.save(Book(bookName))
-        val savedUser = userRepository.save(User(userName, 999))
+        bookRepository.save(Book(name = bookName))
+        userRepository.save(User(name = userName, age = 999))
         val firstRequest = BookLoanRequest(userName, bookName)
         val secondRequest = BookLoanRequest("김정주", bookName)
 
@@ -90,13 +94,13 @@ open class BookServiceTest @Autowired constructor(
 
     @Test
     @DisplayName("returnBook: 정상 케이스")
-    fun returnBook () {
+    fun returnBook() {
         // given
         val bookName = "이상한 나라의 엘리스"
         val userName = "이정주"
 
-        bookRepository.save(Book(bookName))
-        userRepository.save(User(userName, 999))
+        bookRepository.save(Book(name = bookName))
+        userRepository.save(User(name = userName, age = 999))
         val loanRequest = BookLoanRequest(userName, bookName)
         val returnRequest = BookReturnRequest(userName, bookName)
 
@@ -110,7 +114,7 @@ open class BookServiceTest @Autowired constructor(
 
         val (loanHistory) = results
         assertThat(loanHistory.bookName).isEqualTo(bookName)
-        assertThat(loanHistory.user.name).isEqualTo(userName)
+        assertThat(loanHistory.user?.name).isEqualTo(userName)
         assertThat(loanHistory.isReturn).isTrue
     }
 
