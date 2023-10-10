@@ -3,6 +3,7 @@ package com.group.libraryapp.service.book
 import com.group.libraryapp.domain.book.Book
 import com.group.libraryapp.domain.book.BookRepository
 import com.group.libraryapp.domain.book.BookType
+import com.group.libraryapp.domain.book.BookType.*
 import com.group.libraryapp.domain.user.User
 import com.group.libraryapp.domain.user.UserRepository
 import com.group.libraryapp.domain.user.loanhistory.UserLoanHistoryRepository
@@ -36,7 +37,7 @@ open class BookServiceTest @Autowired constructor(
     fun saveBook() {
         // given
         val bookName = "이상한 나라의 앨리스"
-        val bookType = BookType.COMPUTER
+        val bookType = COMPUTER
         val request = BookRequest(bookName, bookType)
 
         // when
@@ -119,6 +120,74 @@ open class BookServiceTest @Autowired constructor(
         assertThat(loanHistory.bookName).isEqualTo(bookName)
         assertThat(loanHistory.user.name).isEqualTo(userName)
         assertThat(loanHistory.status).isEqualTo(UserLoanStatus.RETURNED)
+    }
+
+    @Test
+    @DisplayName("countLoanedBook: 정상 케이스")
+    fun countLoanedBook() {
+        // given
+        val savedUser = userRepository.save(User(name = "a", age = null))
+        val books = bookRepository.saveAll(
+            listOf(
+                Book.fixture(name = "책1"),
+                Book.fixture(name = "책2"),
+                Book.fixture(name = "책3"),
+            )
+        )
+        books.forEach(savedUser::loanBook)
+
+        val returnCount = 2
+        for (i in 0 until returnCount) {
+            savedUser.returnBook(books[i].name)
+        }
+
+        // when
+        val loanedBookCount = bookService.countLoanedBook()
+
+        // then
+        assertThat(loanedBookCount).isEqualTo(books.size - returnCount)
+    }
+
+    @Test
+    @DisplayName("getBookStatistics: 정상 케이스")
+    fun getBookStatistics() {
+        // given
+        val books = mapOf(
+            COMPUTER to listOf(
+                Book.fixture(name = "COMPUTER 책1", type = COMPUTER),
+                Book.fixture(name = "COMPUTER 책2", type = COMPUTER),
+                Book.fixture(name = "COMPUTER 책3", type = COMPUTER),
+            ),
+            SCIENCE to listOf(
+                Book.fixture(name = "SCIENCE 책1", type = SCIENCE),
+                Book.fixture(name = "SCIENCE 책2", type = SCIENCE),
+            ),
+            SOCIETY to listOf(
+                Book.fixture(name = "SOCIETY 책1", type = SOCIETY),
+            ),
+            ECONOMY to listOf(
+                Book.fixture(name = "ECONOMY 책1", type = ECONOMY),
+            ),
+            LANGUAGE to listOf(
+                Book.fixture(name = "LANGUAGE 책1", type = LANGUAGE),
+                Book.fixture(name = "LANGUAGE 책2", type = LANGUAGE),
+                Book.fixture(name = "LANGUAGE 책3", type = LANGUAGE),
+                Book.fixture(name = "LANGUAGE 책4", type = LANGUAGE),
+            ),
+        )
+
+        bookRepository.saveAll(books.flatMap { (_, books) -> books })
+
+        // when
+        val bookStatistics = bookService.getBookStatistics()
+
+        // then
+        assertThat(bookStatistics).hasSize(books.size)
+
+        for (type in books.keys) {
+            val bookStatistic = bookStatistics.first { result -> result.type == type }
+            assertThat(bookStatistic.count).isEqualTo(books[type]!!.size.toLong())
+        }
     }
 
 }
