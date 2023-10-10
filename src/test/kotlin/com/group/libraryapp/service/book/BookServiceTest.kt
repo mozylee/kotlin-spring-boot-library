@@ -2,14 +2,15 @@ package com.group.libraryapp.service.book
 
 import com.group.libraryapp.domain.book.Book
 import com.group.libraryapp.domain.book.BookRepository
+import com.group.libraryapp.domain.book.BookType
 import com.group.libraryapp.domain.user.User
 import com.group.libraryapp.domain.user.UserRepository
 import com.group.libraryapp.domain.user.loanhistory.UserLoanHistoryRepository
+import com.group.libraryapp.domain.user.loanhistory.UserLoanStatus
 import com.group.libraryapp.dto.book.request.BookLoanRequest
 import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -35,7 +36,8 @@ open class BookServiceTest @Autowired constructor(
     fun saveBook() {
         // given
         val bookName = "이상한 나라의 앨리스"
-        val request = BookRequest(bookName)
+        val bookType = BookType.COMPUTER
+        val request = BookRequest(bookName, bookType)
 
         // when
         bookService.saveBook(request)
@@ -46,6 +48,7 @@ open class BookServiceTest @Autowired constructor(
 
         val book = books[0]
         assertThat(book.name).isEqualTo(bookName)
+        assertThat(book.type).isEqualTo(bookType)
     }
 
     @Test
@@ -55,7 +58,7 @@ open class BookServiceTest @Autowired constructor(
         val bookName = "이상한 나라의 엘리스"
         val userName = "이정주"
 
-        bookRepository.save(Book(name = bookName))
+        bookRepository.save(Book.fixture(name = bookName))
         userRepository.save(User(name = userName, age = 999))
         val request = BookLoanRequest(userName, bookName)
 
@@ -69,7 +72,7 @@ open class BookServiceTest @Autowired constructor(
         val (loanHistory) = results
         assertThat(loanHistory.bookName).isEqualTo(bookName)
         assertThat(loanHistory.user!!.name).isEqualTo(userName)
-        assertThat(loanHistory.isReturn).isFalse
+        assertThat(loanHistory.status).isEqualTo(UserLoanStatus.LOANED)
     }
 
     @Test
@@ -79,7 +82,7 @@ open class BookServiceTest @Autowired constructor(
         val bookName = "이상한 나라의 엘리스"
         val userName = "이정주"
 
-        bookRepository.save(Book(name = bookName))
+        bookRepository.save(Book.fixture(name = bookName))
         userRepository.save(User(name = userName, age = 999))
         val firstRequest = BookLoanRequest(userName, bookName)
         val secondRequest = BookLoanRequest("김정주", bookName)
@@ -99,7 +102,7 @@ open class BookServiceTest @Autowired constructor(
         val bookName = "이상한 나라의 엘리스"
         val userName = "이정주"
 
-        bookRepository.save(Book(name = bookName))
+        bookRepository.save(Book.fixture(name = bookName))
         userRepository.save(User(name = userName, age = 999))
         val loanRequest = BookLoanRequest(userName, bookName)
         val returnRequest = BookReturnRequest(userName, bookName)
@@ -115,7 +118,7 @@ open class BookServiceTest @Autowired constructor(
         val (loanHistory) = results
         assertThat(loanHistory.bookName).isEqualTo(bookName)
         assertThat(loanHistory.user?.name).isEqualTo(userName)
-        assertThat(loanHistory.isReturn).isTrue
+        assertThat(loanHistory.status).isEqualTo(UserLoanStatus.RETURNED)
     }
 
 }

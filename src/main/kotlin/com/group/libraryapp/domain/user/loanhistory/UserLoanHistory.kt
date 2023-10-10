@@ -14,11 +14,12 @@ class UserLoanHistory constructor(
 
     val bookName: String?,
 
-    var isReturn: Boolean,
+    @Enumerated(EnumType.STRING)
+    var status: UserLoanStatus = UserLoanStatus.LOANED,
 ) {
 
     fun doReturn() {
-        this.isReturn = true
+        this.status = UserLoanStatus.RETURNED
     }
 
 }

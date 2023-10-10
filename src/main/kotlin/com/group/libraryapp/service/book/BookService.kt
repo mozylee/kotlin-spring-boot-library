@@ -4,6 +4,7 @@ import com.group.libraryapp.domain.book.Book
 import com.group.libraryapp.domain.book.BookRepository
 import com.group.libraryapp.domain.user.UserRepository
 import com.group.libraryapp.domain.user.loanhistory.UserLoanHistoryRepository
+import com.group.libraryapp.domain.user.loanhistory.UserLoanStatus
 import com.group.libraryapp.dto.book.request.BookLoanRequest
 import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
@@ -19,7 +20,7 @@ class BookService constructor(
 
     @Transactional
     fun saveBook(request: BookRequest) {
-        val book = Book(name = request.name)
+        val book = Book.fixture(name = request.name, type = request.type)
 
         bookRepository.save(book)
     }
@@ -29,7 +30,7 @@ class BookService constructor(
         val book = bookRepository.findByName(request.bookName)
         requireNotNull(book)
 
-        val userLoanHistory = userLoanHistoryRepository.findByBookNameAndIsReturn(request.bookName, false)
+        val userLoanHistory = userLoanHistoryRepository.findByBookNameAndStatus(request.bookName, UserLoanStatus.LOANED)
         require(userLoanHistory == null) { "진작 대출되어 있는 책입니다" }
 
         val user = userRepository.findByName(request.userName)
