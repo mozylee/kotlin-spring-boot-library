@@ -71,7 +71,7 @@ open class BookServiceTest @Autowired constructor(
 
         val (loanHistory) = results
         assertThat(loanHistory.bookName).isEqualTo(bookName)
-        assertThat(loanHistory.user!!.name).isEqualTo(userName)
+        assertThat(loanHistory.user.name).isEqualTo(userName)
         assertThat(loanHistory.status).isEqualTo(UserLoanStatus.LOANED)
     }
 
@@ -117,7 +117,7 @@ open class BookServiceTest @Autowired constructor(
 
         val (loanHistory) = results
         assertThat(loanHistory.bookName).isEqualTo(bookName)
-        assertThat(loanHistory.user?.name).isEqualTo(userName)
+        assertThat(loanHistory.user.name).isEqualTo(userName)
         assertThat(loanHistory.status).isEqualTo(UserLoanStatus.RETURNED)
     }
 

@@ -1,7 +1,10 @@
 package com.group.libraryapp.service.user
 
+import com.group.libraryapp.domain.book.Book
+import com.group.libraryapp.domain.book.BookRepository
 import com.group.libraryapp.domain.user.User
 import com.group.libraryapp.domain.user.UserRepository
+import com.group.libraryapp.domain.user.loanhistory.UserLoanStatus
 import com.group.libraryapp.dto.user.request.UserCreateRequest
 import com.group.libraryapp.dto.user.request.UserUpdateRequest
 import org.assertj.core.api.Assertions.*
@@ -17,6 +20,7 @@ import javax.transaction.Transactional
 open class UserServiceTest @Autowired constructor(
     private val userRepository: UserRepository,
     private val userService: UserService,
+    private val bookRepository: BookRepository,
 ) {
 
     @Test
@@ -80,6 +84,53 @@ open class UserServiceTest @Autowired constructor(
         // then
         requireNotNull(updatedUser)
         assertThat(updatedUser.name).isEqualTo(newName)
+    }
+
+    @Test
+    @DisplayName("getUserLoanHistories: 정상 케이스")
+    fun getUserLoanHistories() {
+        // given
+        val user = userRepository.save(User(name = "user1", age = null))
+
+        // when
+        val userLoanHistories = userService.getUserLoanHistories()
+
+        // then
+        assertThat(userLoanHistories).hasSize(1)
+
+        val (userLoanHistory) = userLoanHistories
+        assertThat(userLoanHistory.name).isEqualTo(user.name)
+        assertThat(userLoanHistory.books).isEmpty()
+    }
+
+    @Test
+    @DisplayName("getUserLoanHistories: 대출 기록 다수 유저 케이스")
+    fun getUserLoanHistories2() {
+        // given
+        val user = userRepository.save(User(name = "user1", age = null))
+        val books = listOf(
+            Book.fixture(name = "책1"),
+            Book.fixture(name = "책2"),
+            Book.fixture(name = "책3"),
+        )
+        bookRepository.saveAll(books)
+        books.forEach(user::loanBook)
+
+        user.returnBook(books[0].name)
+
+        // when
+        val userLoanHistories = userService.getUserLoanHistories()
+
+        // then
+        assertThat(userLoanHistories).hasSize(1)
+
+        val (userLoanHistory) = userLoanHistories
+        assertThat(userLoanHistory.name).isEqualTo(user.name)
+        assertThat(userLoanHistory.books).hasSize(3)
+        assertThat(userLoanHistory.books).extracting("name")
+            .containsExactlyInAnyOrder(*user.userLoanHistories.map { it.bookName }.toTypedArray())
+        assertThat(userLoanHistory.books).extracting("isReturn")
+            .containsExactlyInAnyOrder(*user.userLoanHistories.map { it.status == UserLoanStatus.RETURNED }.toTypedArray())
     }
 
 }
