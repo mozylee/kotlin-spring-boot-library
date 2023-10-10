@@ -10,6 +10,7 @@ import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
 import com.group.libraryapp.dto.book.response.BookStatisticResponse
 import com.group.libraryapp.repository.book.BookQuerydslRepository
+import com.group.libraryapp.repository.user.loanhistory.UserLoanHistoryQuerydslRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -18,7 +19,7 @@ class BookService constructor(
     private val bookRepository: BookRepository,
     private val bookQuerydslRepository: BookQuerydslRepository,
     private val userRepository: UserRepository,
-    private val userLoanHistoryRepository: UserLoanHistoryRepository,
+    private val userLoanHistoryQuerydslRepository: UserLoanHistoryQuerydslRepository,
 ) {
 
     @Transactional
@@ -33,7 +34,7 @@ class BookService constructor(
         val book = bookRepository.findByName(request.bookName)
         requireNotNull(book)
 
-        val userLoanHistory = userLoanHistoryRepository.findByBookNameAndStatus(request.bookName, LOANED)
+        val userLoanHistory = userLoanHistoryQuerydslRepository.find(request.bookName, LOANED)
         require(userLoanHistory == null) { "진작 대출되어 있는 책입니다" }
 
         val user = userRepository.findByName(request.userName)
@@ -51,7 +52,7 @@ class BookService constructor(
     }
 
     @Transactional(readOnly = true)
-    fun countLoanedBook() = userLoanHistoryRepository.countByStatus(LOANED).toInt()
+    fun countLoanedBook() = userLoanHistoryQuerydslRepository.count(LOANED).toInt()
 
     @Transactional(readOnly = true)
     fun getBookStatistics(): List<BookStatisticResponse> = bookQuerydslRepository.getStatistics()
