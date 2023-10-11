@@ -23,13 +23,11 @@ class Book constructor(
             name: String = "책 이름",
             type: BookType = BookType.COMPUTER,
             id: Long? = null,
-        ): Book {
-            return Book(
-                id = id,
-                name = name,
-                type = type,
-            )
-        }
+        ): Book = Book(
+            id = id,
+            name = name,
+            type = type,
+        )
     }
 
 }
